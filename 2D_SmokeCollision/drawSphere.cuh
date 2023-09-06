@@ -13,7 +13,6 @@ class drawSphere {
 	int numSlices;
 	int sphereNum;
 
-	int* d_collision_result;
 
 	GLuint spherebuffer;
 	cudaGraphicsResource* cudaVBOsphere;
@@ -28,16 +27,18 @@ class drawSphere {
 	double xpos, ypos;
 	double sphereScale;
 public:
+	int* d_collision_result;
+public:
 	drawSphere(int N);
 	~drawSphere();
 
 public:
 	void init_camera();
 	void init(int N);
-	void drawSph(int N);
+	void drawSph(int N, double dx, double dy);
 };
 
 __global__ void init_sphere(int stacks, int slices, glm::vec3* sphere, double x, double y, double scale);
-__global__ void check_collision();
+__global__ void check_collision(int N, glm::vec3 sphere_center, float sphere_radius, int* collision_result, double dx, double dy);
 
 #endif __DRAWSPHERE_H__

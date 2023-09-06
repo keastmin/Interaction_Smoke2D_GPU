@@ -25,11 +25,11 @@ public:
 
 public:
 	void init(int N, double dx, double dy);
-	void draw_dens(int N, double* kd);
+	void draw_dens(int N, double* kd, int* collision_result);
 };
 
 __global__ void init_dens(int N, glm::vec3* dens, double dx, double dy);
 __global__ void init_color_dens(int N, glm::vec3* densC);
-__global__ void update_dens(int N, glm::vec3* densC, double* kd);
+__global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_result);
 
 #endif __DENSITY_H__

@@ -89,7 +89,7 @@ void density::init(int N, double dx, double dy) {
 }
 
 
-__global__ void update_dens(int N, glm::vec3* densC, double* kd) {
+__global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_result) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -106,24 +106,36 @@ __global__ void update_dens(int N, glm::vec3* densC, double* kd) {
 		glm::vec3 densColord01(d01, d01, d01);
 		glm::vec3 densColord11(d11, d11, d11);
 		glm::vec3 densColord10(d10, d10, d10);
+		glm::vec3 collisionColor(1.0f, 1.0f, 0.0f);
 
-		densC[6 * idx + 0] = densColord00;
-		densC[6 * idx + 1] = densColord01;
-		densC[6 * idx + 2] = densColord11;
+		if (collision_result[idx] == 1) {
+			densC[6 * idx + 0] = collisionColor;
+			densC[6 * idx + 1] = collisionColor;
+			densC[6 * idx + 2] = collisionColor;
 
-		densC[6 * idx + 3] = densColord11;
-		densC[6 * idx + 4] = densColord10;
-		densC[6 * idx + 5] = densColord00;
+			densC[6 * idx + 3] = collisionColor;
+			densC[6 * idx + 4] = collisionColor;
+			densC[6 * idx + 5] = collisionColor;
+		}
+		else {
+			densC[6 * idx + 0] = densColord00;
+			densC[6 * idx + 1] = densColord01;
+			densC[6 * idx + 2] = densColord11;
+
+			densC[6 * idx + 3] = densColord11;
+			densC[6 * idx + 4] = densColord10;
+			densC[6 * idx + 5] = densColord00;
+		}
 	}
 }
 
-void density::draw_dens(int N, double* kd) {
+void density::draw_dens(int N, double* kd, int* collision_result) {
 	dim3 blockSize(16, 16);
 	dim3 numBlock((N + blockSize.x - 1) / blockSize.x, (N + blockSize.y - 1) / blockSize.y);
 
 	cudaGraphicsMapResources(1, &cudaVBODensColor, 0);
 	cudaGraphicsResourceGetMappedPointer((void**)&d_dens_color_buffer, &numByteDensColor, cudaVBODensColor);
-	update_dens<<<numBlock, blockSize>>>(N, d_dens_color_buffer, kd);
+	update_dens<<<numBlock, blockSize>>>(N, d_dens_color_buffer, kd, collision_result);
 	cudaDeviceSynchronize();
 	cudaGraphicsUnmapResources(1, &cudaVBODensColor, 0);
 

@@ -226,19 +226,19 @@ int main() {
 		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
+		glUniform1f(alpValue, 0.3f);
+		_sphere->drawSph(N, drawX, drawY);
+
 		// 시뮬레이션 반복
 		sim_fluid();
 
 		glUniform1f(alpValue, 1.0f);
 		if (mode == 0) {
-			_den->draw_dens(N, dens);
+			_den->draw_dens(N, dens, _sphere->d_collision_result);
 		}
 		if (mode == 1) {
 			_vel->draw_velocity(N, u, v);
 		}
-
-		glUniform1f(alpValue, 0.3f);
-		_sphere->drawSph(N);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -13,9 +13,11 @@
 #include "FluidSolver.cuh"
 #include "velocity.cuh"
 #include "density.cuh"
+#include "drawSphere.cuh"
 
 velocity* _vel;
 density* _den;
+drawSphere* _sphere;
 
 // 2차원 인덱스를 1차원 인덱스처럼 관리
 #define IX(i, j) ((i) + (N+2)*(j))
@@ -187,10 +189,12 @@ int main() {
 	double drawY = -0.5f;
 	_vel = new velocity(N, drawX, drawY);
 	_den = new density(N, drawX, drawY);
+	_sphere = new drawSphere(N);
 
 	// 쉐이더 읽기
 	GLuint programID = LoadShaders("VertexShaderSL.txt", "FragmentShaderSL.txt");
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+	GLuint alpValue = glGetUniformLocation(programID, "alphaValue");
 
 	// 마우스 세팅
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -207,6 +211,8 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	do {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -223,12 +229,16 @@ int main() {
 		// 시뮬레이션 반복
 		sim_fluid();
 
+		glUniform1f(alpValue, 1.0f);
 		if (mode == 0) {
 			_den->draw_dens(N, dens);
 		}
 		if (mode == 1) {
 			_vel->draw_velocity(N, u, v);
 		}
+
+		glUniform1f(alpValue, 0.3f);
+		_sphere->drawSph(N);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

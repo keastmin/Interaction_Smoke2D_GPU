@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="density.cu" />
+    <CudaCompile Include="drawSphere.cu" />
     <CudaCompile Include="FluidSolver.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </CudaCompile>
@@ -25,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="control.h" />
     <ClInclude Include="density.cuh" />
+    <ClInclude Include="drawSphere.cuh" />
     <ClInclude Include="FluidSolver.cuh">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>

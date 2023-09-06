@@ -1,0 +1,11 @@
+#version 450 core
+
+out vec3 color;
+
+in vec3 fragmentColor;
+
+uniform double alphaValue;
+
+void main(){
+	color = fragmentColor;
+}

@@ -12,7 +12,6 @@ drawSphere::~drawSphere() {
 	delete sphereColors;
 	glDeleteBuffers(1, &spherebuffer);
 	glDeleteBuffers(1, &spereColorBuffer);
-	cudaFree(d_collision_result);
 	cudaGraphicsUnregisterResource(cudaVBOsphere);
 }
 
@@ -100,43 +99,13 @@ void drawSphere::init(int N) {
 
 	sphereColors = new glm::vec3[sphereNum];
 	for (int i = 0; i < sphereNum; ++i) {
-		sphereColors[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+		sphereColors[i] = glm::vec3(0.0f, 1.0f, 1.0f);
 	}
 
 	glGenBuffers(1, &spereColorBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, spereColorBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sphereNum * sizeof(glm::vec3), sphereColors, GL_STATIC_DRAW);
-
-	// 충돌 감지 버퍼
-	cudaMalloc((void**)&d_collision_result, N * N * sizeof(int));
-	cudaMemset(d_collision_result, 0, N * N * sizeof(int));
 }
-
-__global__ void check_collision(int N, glm::vec3 sphere_center, float sphere_radius, int* collision_result, double dx, double dy) {
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	int j = blockIdx.y * blockDim.y + threadIdx.y;
-	if (i < N && j < N) {
-		int idx = DIX(i, j);
-		double h, x, y;
-		h = 1.0 / N;
-		x = (i - 0.5) * h + dx;
-		y = (j - 0.5) * h + dy;
-
-		glm::vec3 cell_center(x, y, 0.0f);
-
-		// 구체와 셀 중심점 간의 거리 계산
-		float distance = glm::length(cell_center - sphere_center);
-
-		// 충돌 감지
-		if (distance <= sphere_radius) {
-			collision_result[idx] = 1;  // 충돌 발생
-		}
-		else {
-			collision_result[idx] = 0;  // 충돌 없음
-		}
-	}
-}
-
 
 void drawSphere::drawSph(int N, double dx, double dy) {
 	glm::vec3 cameraPos = getCameraPosition();
@@ -148,9 +117,6 @@ void drawSphere::drawSph(int N, double dx, double dy) {
 
 	dim3 blockDim(16, 16);
 	dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
-
-	glm::vec3 sphere_center(xpos, ypos, 0.0f);
-	check_collision<<<gridDim, blockDim>>>(N, sphere_center, sphereScale, d_collision_result, dx, dy);
 
 	cudaGraphicsMapResources(1, &cudaVBOsphere, 0);
 	cudaGraphicsResourceGetMappedPointer((void**)&d_sphere_buffer, &numBytesphere, cudaVBOsphere);

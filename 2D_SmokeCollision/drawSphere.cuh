@@ -25,9 +25,8 @@ class drawSphere {
 	glm::vec3* d_color_buffer;
 
 	double xpos, ypos;
-	double sphereScale;
 public:
-	int* d_collision_result;
+	double sphereScale;
 public:
 	drawSphere(int N);
 	~drawSphere();
@@ -39,6 +38,5 @@ public:
 };
 
 __global__ void init_sphere(int stacks, int slices, glm::vec3* sphere, double x, double y, double scale);
-__global__ void check_collision(int N, glm::vec3 sphere_center, float sphere_radius, int* collision_result, double dx, double dy);
 
 #endif __DRAWSPHERE_H__

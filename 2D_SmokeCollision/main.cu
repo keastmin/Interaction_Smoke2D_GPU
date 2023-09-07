@@ -14,10 +14,12 @@
 #include "velocity.cuh"
 #include "density.cuh"
 #include "drawSphere.cuh"
+#include "calcCollision.cuh"
 
 velocity* _vel;
 density* _den;
 drawSphere* _sphere;
+calcCollision* _collision;
 
 // 2차원 인덱스를 1차원 인덱스처럼 관리
 #define IX(i, j) ((i) + (N+2)*(j))
@@ -47,6 +49,7 @@ static double source = 50.0f;
 // 시뮬레이션 제어 변수
 static int addforce[3] = { 0, 0, 0 };
 static int mode = 0;
+static int hideSphere = 0;
 
 static int width = WINDOW_WIDTH;
 static int height = WINDOW_HEIGHT;
@@ -144,6 +147,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		std::cout << "addforce[1] : " << addforce[1] << '\n';
 	}
 
+	if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
+		hideSphere = (hideSphere == 0) ? 1 : 0;
+		std::cout << "hideSphere : " << hideSphere << '\n';
+	}
+
 	if (key == GLFW_KEY_1 && action == GLFW_RELEASE) {
 		mode = 0;
 		std::cout << "mode : " << mode << '\n';
@@ -190,6 +198,7 @@ int main() {
 	_vel = new velocity(N, drawX, drawY);
 	_den = new density(N, drawX, drawY);
 	_sphere = new drawSphere(N);
+	_collision = new calcCollision(N, drawX, drawY, _sphere->sphereScale);
 
 	// 쉐이더 읽기
 	GLuint programID = LoadShaders("VertexShaderSL.txt", "FragmentShaderSL.txt");
@@ -207,10 +216,11 @@ int main() {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	do {
@@ -226,15 +236,22 @@ int main() {
 		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-		glUniform1f(alpValue, 0.3f);
-		_sphere->drawSph(N, drawX, drawY);
-
 		// 시뮬레이션 반복
 		sim_fluid();
 
+		// 충돌 감지
+		_collision->check_collision(N);
+
+		// 구체 그리기
+		if (!hideSphere) {
+			glUniform1f(alpValue, 0.06f);
+			_sphere->drawSph(N, drawX, drawY);
+		}
+
+		// 연기 그리기
 		glUniform1f(alpValue, 1.0f);
 		if (mode == 0) {
-			_den->draw_dens(N, dens, _sphere->d_collision_result);
+			_den->draw_dens(N, dens, _collision->collisionResult_D);
 		}
 		if (mode == 1) {
 			_vel->draw_velocity(N, u, v);

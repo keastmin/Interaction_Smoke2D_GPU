@@ -1,7 +1,7 @@
 #include "FluidSolver.cuh"
 
 #define IX(i,j) ((i)+(N+2)*(j))
-#define LINEARSOLVERTIMES 20
+#define LINEARSOLVERTIMES 10
 #define SWAP(x0,x) {double * tmp=x0;x0=x;x=tmp;}
 
 // 소스항 추가 커널

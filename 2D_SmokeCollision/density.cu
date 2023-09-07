@@ -106,16 +106,26 @@ __global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_
 		glm::vec3 densColord01(d01, d01, d01);
 		glm::vec3 densColord11(d11, d11, d11);
 		glm::vec3 densColord10(d10, d10, d10);
-		glm::vec3 collisionColor(1.0f, 1.0f, 0.0f);
+		glm::vec3 collisionColorIn(1.0f, 0.0f, 0.0f);
+		glm::vec3 collisionColorOut(1.0f, 1.0f, 0.0f);
 
 		if (collision_result[idx] == 1) {
-			densC[6 * idx + 0] = collisionColor;
-			densC[6 * idx + 1] = collisionColor;
-			densC[6 * idx + 2] = collisionColor;
+			densC[6 * idx + 0] = collisionColorIn;
+			densC[6 * idx + 1] = collisionColorIn;
+			densC[6 * idx + 2] = collisionColorIn;
 
-			densC[6 * idx + 3] = collisionColor;
-			densC[6 * idx + 4] = collisionColor;
-			densC[6 * idx + 5] = collisionColor;
+			densC[6 * idx + 3] = collisionColorIn;
+			densC[6 * idx + 4] = collisionColorIn;
+			densC[6 * idx + 5] = collisionColorIn;
+		}
+		else if (collision_result[idx] == 2) {
+			densC[6 * idx + 0] = collisionColorOut;
+			densC[6 * idx + 1] = collisionColorOut;
+			densC[6 * idx + 2] = collisionColorOut;
+
+			densC[6 * idx + 3] = collisionColorOut;
+			densC[6 * idx + 4] = collisionColorOut;
+			densC[6 * idx + 5] = collisionColorOut;
 		}
 		else {
 			densC[6 * idx + 0] = densColord00;

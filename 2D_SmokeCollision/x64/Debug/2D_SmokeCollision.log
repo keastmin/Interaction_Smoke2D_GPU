@@ -1,6 +1,6 @@
-﻿  Compiling CUDA source file main.cu...
+﻿  Compiling CUDA source file calcCollision.cu...
   
-  C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\bin\HostX64\x64" -x cu   -IDependencies\GLFW\include -IDependencies\GLEW\include -IDependencies\GLM -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision\x64\Debug\main.cu.obj "C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision\main.cu" 
+  C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\bin\HostX64\x64" -x cu   -IDependencies\GLFW\include -IDependencies\GLEW\include -IDependencies\GLM -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision\x64\Debug\calcCollision.cu.obj "C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision\calcCollision.cu" 
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
@@ -421,9 +421,12 @@ C:\Users\kemin\source\repos\2D_SmokeCollision\2D_SmokeCollision\Dependencies\GLM
     		__declspec(__device__) __declspec(__host__)  vec<1, T, Q> & operator=(vec const& v) = default;
     		                                  ^
   
-  main.cu
-  tmpxft_0000264c_00000000-7_main.cudafe1.cpp
+  calcCollision.cu
+  tmpxft_00004d64_00000000-7_calcCollision.cudafe1.cpp
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\driver_types.h(1329): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+     C:\Users\kemin\source\repos\2D_SmokeCollision\x64\Debug\2D_SmokeCollision.lib 라이브러리 및 C:\Users\kemin\source\repos\2D_SmokeCollision\x64\Debug\2D_SmokeCollision.exp 개체를 생성하고 있습니다.
+LINK : warning LNK4098: 'LIBCMT' defaultlib가 다른 라이브러리와 충돌합니다. /NODEFAULTLIB:library를 사용하십시오.
+LINK : warning LNK4098: 'MSVCRT' defaultlib가 다른 라이브러리와 충돌합니다. /NODEFAULTLIB:library를 사용하십시오.
   2D_SmokeCollision.vcxproj -> C:\Users\kemin\source\repos\2D_SmokeCollision\x64\Debug\2D_SmokeCollision.exe

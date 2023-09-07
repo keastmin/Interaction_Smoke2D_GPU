@@ -24,6 +24,9 @@
     <CudaCompile Include="drawSphere.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
+    <CudaCompile Include="calcCollision.cu">
+      <Filter>소스 파일</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="control.cpp">
@@ -50,6 +53,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="drawSphere.cuh">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="calcCollision.cuh">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

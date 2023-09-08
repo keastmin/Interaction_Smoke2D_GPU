@@ -24,7 +24,7 @@ __global__ void k_set_bnd(int N, int b, double* x) {
     }
 }
 
-// 모서리 경계 조건 커널
+// 코너 경계 조건 커널
 __global__ void k_update_corners(int N, double* x)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -36,14 +36,43 @@ __global__ void k_update_corners(int N, double* x)
     }
 }
 
+// 충돌 경계 조건 커널
+// 1 : 내부, 2 : 외부, 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽, 7 : 왼쪽 위 코너, 8 : 오른쪽 위 코너, 9 : 오른쪽 아래 코너, 10 : 왼쪽 아래 코너
+__global__ void k_collision_bnd(int N, int b, double* x, int* calcResult) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
+    int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
+    if (i < N && j < N) {
+        int idx = IX(i, j);
+        if (calcResult[idx] == 1) {
+            x[idx] = 0;
+        }
+        if (calcResult[idx] == 3) {
+            x[idx] = b == 2 ? -x[IX(i, j + 1)] : x[IX(i, j + 1)];
+        }
+        if (calcResult[idx] == 4) {
+            x[idx] = b == 2 ? -x[IX(i, j - 1)] : x[IX(i, j - 1)];
+        }
+        if (calcResult[idx] == 5) {
+            x[idx] = b == 1 ? -x[IX(i + 1, j)] : x[IX(i + 1, j)];
+        }
+        if (calcResult[idx] == 6) {
+            x[idx] = b == 1 ? -x[IX(i - 1, j)] : x[IX(i - 1, j)];
+        }
+    }
+}
+
 // 그리드 경계 조건 커널 구동 함수
-void set_bnd(int N, int b, double* x)
+void set_bnd(int N, int b, double* x, int* calcIdx)
 {
     int blockSize = 256;
     int numBlock = (N + blockSize - 1) / blockSize;
     k_set_bnd << <numBlock, blockSize >> > (N, b, x);
 
     k_update_corners << <1, 1 >> > (N, x);
+
+    dim3 blockDim(16, 16);
+    dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
+    k_collision_bnd<<<gridDim, blockDim>>>(N, b, x, calcIdx);
 }
 /* ----------------------------------------------------- */
 
@@ -68,7 +97,7 @@ __global__ void black_cell_lin(int N, double* x, double* x0, double a, double c)
     }
 }
 
-void lin_solve(int N, int b, double* x, double* x0, double a, double c) {
+void lin_solve(int N, int b, double* x, double* x0, double a, double c, int* calcIdx) {
     int l;
     dim3 blockDim(16, 16);
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
@@ -78,17 +107,17 @@ void lin_solve(int N, int b, double* x, double* x0, double a, double c) {
         cudaDeviceSynchronize();
         black_cell_lin << <gridDim, blockDim >> > (N, x, x0, a, c);
         cudaDeviceSynchronize();
-        set_bnd(N, b, x);
+        set_bnd(N, b, x, calcIdx);
         cudaDeviceSynchronize();
     }
 }
 /* ----------------------------------------------------- */
 
 // 확산 함수
-void diffuse(int N, int b, double* x, double* x0, double diff, double dt)
+void diffuse(int N, int b, double* x, double* x0, double diff, double dt, int* calcIdx)
 {
     double a = dt * diff * N * N;
-    lin_solve(N, b, x, x0, a, 1 + 4 * a);
+    lin_solve(N, b, x, x0, a, 1 + 4 * a, calcIdx);
 }
 
 /* ----------------------이류 함수---------------------- */
@@ -114,7 +143,7 @@ __global__ void k_advect(int N, double* d, double* d0, double* u, double* v, dou
 
 
 // 이류 커널 구동 함수
-void advect(int N, int b, double* d, double* d0, double* u, double* v, double dt)
+void advect(int N, int b, double* d, double* d0, double* u, double* v, double dt, int* calcIdx)
 {
     dim3 blockDim(16, 16);
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
@@ -122,7 +151,7 @@ void advect(int N, int b, double* d, double* d0, double* u, double* v, double dt
     k_advect << <gridDim, blockDim >> > (N, d, d0, u, v, dt);
     cudaDeviceSynchronize();
 
-    set_bnd(N, b, d);
+    set_bnd(N, b, d, calcIdx);
     cudaDeviceSynchronize();
 }
 /* ---------------------------------------------------- */
@@ -151,28 +180,28 @@ __global__ void k_project(int N, double* u, double* v, double* p) {
 }
 
 // 프로젝트 커널 함수를 구동하는 함수
-void project(int N, double* u, double* v, double* p, double* div)
+void project(int N, double* u, double* v, double* p, double* div, int* calcIdx)
 {
     dim3 blockDim(16, 16);
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
     poison<<<gridDim, blockDim>>>(N, u, v, p, div);
     cudaDeviceSynchronize();
 
-    set_bnd(N, 0, div); set_bnd(N, 0, p);
+    set_bnd(N, 0, div, calcIdx); set_bnd(N, 0, p, calcIdx);
     cudaDeviceSynchronize();
 
-    lin_solve(N, 0, p, div, 1, 4);
+    lin_solve(N, 0, p, div, 1, 4, calcIdx);
 
     k_project<<<gridDim, blockDim>>>(N, u, v, p);
     cudaDeviceSynchronize();
 
-    set_bnd(N, 1, u); set_bnd(N, 2, v);
+    set_bnd(N, 1, u, calcIdx); set_bnd(N, 2, v, calcIdx);
     cudaDeviceSynchronize();
 }
 /* ------------------------------------------------------ */
 
 // 밀도 필드 업데이트
-void dens_step(int N, double* x, double* x0, double* u, double* v, double diff, double dt)
+void dens_step(int N, double* x, double* x0, double* u, double* v, double diff, double dt, int* calcIdx)
 {
     // add source kernel
     int size = (N + 2) * (N + 2);
@@ -182,12 +211,12 @@ void dens_step(int N, double* x, double* x0, double* u, double* v, double diff, 
     cudaDeviceSynchronize();
 
     // swap and diffuse
-    SWAP(x0, x); diffuse(N, 0, x, x0, diff, dt);
-    SWAP(x0, x); advect(N, 0, x, x0, u, v, dt);
+    SWAP(x0, x); diffuse(N, 0, x, x0, diff, dt, calcIdx);
+    SWAP(x0, x); advect(N, 0, x, x0, u, v, dt, calcIdx);
 }
 
 // 속도 필드 업데이트
-void vel_step(int N, double* u, double* v, double* u0, double* v0, double visc, double dt)
+void vel_step(int N, double* u, double* v, double* u0, double* v0, double visc, double dt, int* calcIdx)
 {
     // add source kernel
     int size = (N + 2) * (N + 2);
@@ -197,16 +226,16 @@ void vel_step(int N, double* u, double* v, double* u0, double* v0, double visc, 
     cudaDeviceSynchronize();
 
     // swap and diffuse
-    SWAP(u0, u); diffuse(N, 1, u, u0, visc, dt);
-    SWAP(v0, v); diffuse(N, 2, v, v0, visc, dt);
+    SWAP(u0, u); diffuse(N, 1, u, u0, visc, dt, calcIdx);
+    SWAP(v0, v); diffuse(N, 2, v, v0, visc, dt, calcIdx);
 
     // project and swap
-    project(N, u, v, u0, v0);
+    project(N, u, v, u0, v0, calcIdx);
     SWAP(u0, u); SWAP(v0, v);
 
     // advect
-    advect(N, 1, u, u0, u0, v0, dt); advect(N, 2, v, v0, u0, v0, dt);
+    advect(N, 1, u, u0, u0, v0, dt, calcIdx); advect(N, 2, v, v0, u0, v0, dt, calcIdx);
 
     // final project
-    project(N, u, v, u0, v0);
+    project(N, u, v, u0, v0, calcIdx);
 }

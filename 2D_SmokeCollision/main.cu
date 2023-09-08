@@ -127,11 +127,37 @@ void get_force_source(double* d, double* u, double* v) {
 }
 /* --------------------------------------------------- */
 
+/* --------------------충돌 힘 함수-------------------- */
+__global__ void setCollisionForce(int hN, double* up, double* vp, double* u, double* v, int* calcIdx) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i + 1, j + 1);
+	if (i < hN && j < hN) {
+		if (calcIdx[idx] == 1) {
+			u[idx] = 0;
+			v[idx] = 0;
+		}
+		else if (calcIdx[idx] == 2) {
+			vp[idx] = 0.3;
+		}
+	}
+}
+
+void collision_force_source(int* calcIdx) {
+	dim3 blockDim(16, 16);
+	dim3 numBlock((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
+	if (addforce[1] == 1) {
+		setCollisionForce<<<numBlock, blockDim>>>(N, u_prev, v_prev, u, v, calcIdx);
+	}
+}
+/* --------------------------------------------------- */
+
 // 시뮬레이션 구동 함수
-void sim_fluid() {
+void sim_fluid(int* calcIdx) {
 	get_force_source(dens_prev, u_prev, v_prev);
-	vel_step(N, u, v, u_prev, v_prev, visc, dt);
-	dens_step(N, dens, dens_prev, u, v, diff, dt);
+	collision_force_source(calcIdx);
+	vel_step(N, u, v, u_prev, v_prev, visc, dt, calcIdx);
+	dens_step(N, dens, dens_prev, u, v, diff, dt, calcIdx);
 	cudaDeviceSynchronize();
 }
 
@@ -236,11 +262,11 @@ int main() {
 		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-		// 시뮬레이션 반복
-		sim_fluid();
-
 		// 충돌 감지
 		_collision->check_collision(N);
+
+		// 시뮬레이션 반복
+		sim_fluid(_collision->collisionResult_IX);
 
 		// 구체 그리기
 		if (!hideSphere) {

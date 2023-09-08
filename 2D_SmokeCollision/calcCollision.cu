@@ -8,11 +8,7 @@ calcCollision::calcCollision(int N, double dx, double dy, float scale) {
 }
 
 calcCollision::~calcCollision() {
-	cudaFree(draw_InsideCell);
-	cudaFree(draw_OutsideCell);
 	cudaFree(collisionResult_D);
-	cudaFree(calc_InsideCell);
-	cudaFree(calc_OutsideCell);
 	cudaFree(collisionResult_IX);
 }
 
@@ -21,18 +17,12 @@ void calcCollision::init(int N, double dx, double dy, float scale) {
 	cy = dy;
 	cScale = scale;
 
-	cudaMalloc((void**)&draw_InsideCell, N * N * sizeof(int));
-	cudaMalloc((void**)&draw_OutsideCell, N * N * sizeof(int));
+
+	// 충돌 감지 셀 초기화
 	cudaMalloc((void**)&collisionResult_D, N  * N * sizeof(int));
-	cudaMalloc((void**)&calc_InsideCell, (N + 2) * (N + 2) * sizeof(int));
-	cudaMalloc((void**)&calc_OutsideCell, (N + 2) * (N + 2) * sizeof(int));
 	cudaMalloc((void**)&collisionResult_IX, (N + 2) * (N + 2) * sizeof(int));
 
-	cudaMemset(draw_InsideCell, 0, N * N * sizeof(int));
-	cudaMemset(draw_OutsideCell, 0, N * N * sizeof(int));
 	cudaMemset(collisionResult_D, 0, N * N * sizeof(int));
-	cudaMemset(calc_InsideCell, 0, (N + 2) * (N + 2) * sizeof(int));
-	cudaMemset(calc_OutsideCell, 0, (N + 2) * (N + 2) * sizeof(int));
 	cudaMemset(collisionResult_IX, 0, (N + 2) * (N + 2) * sizeof(int));
 }
 
@@ -64,22 +54,92 @@ __global__ void collision_kernel(int N, glm::vec3 sphere_center, float sphere_ra
 	}
 }
 
-__global__ void divide_collision_draw(int N, int* insideCell, int* outsideCell, int* drawResult) {
+// 외부 셀 정의
+__global__ void divide_collision_draw(int N, int* drawResult) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
-	if (i >= 1 && i < N - 1 && j >= 1 && j < N - 1) {  // 배열 경계를 벗어나지 않도록 수정
-		int idx = DIX(i, j);
+	int idx = DIX(i, j);
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {  // 배열 경계를 벗어나지 않도록 수정
 		if (drawResult[idx] == 1) {
 			if (drawResult[DIX(i - 1, j)] == 0 || drawResult[DIX(i + 1, j)] == 0 ||
 				drawResult[DIX(i, j - 1)] == 0 || drawResult[DIX(i, j + 1)] == 0) {
 				drawResult[idx] = 2;  // 외부 셀
 			}
-			else {
-				drawResult[idx] = 1;  // 내부 셀
+		}
+	}
+	else if ((i == 0 && j <= N - 1) || (i == N - 1 && j <= N - 1) ||
+			(i <= N - 1 && j == 0) || (i <= N - 1 && j == N - 1)) {		
+		drawResult[idx] = (drawResult[idx] == 1) ? 2 : 0;
+	}
+}
+
+__global__ void divide_collision_calc(int N, int* calcResult) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i + 1, j + 1);
+
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {  // 배열 경계를 벗어나지 않도록 수정
+		if (calcResult[idx] == 1) {
+			if (calcResult[IX(i - 1, j)] == 0 || calcResult[IX(i + 1, j)] == 0 ||
+				calcResult[IX(i, j - 1)] == 0 || calcResult[IX(i, j + 1)] == 0) {
+				calcResult[idx] = 2;  // 외부 셀
 			}
 		}
-		else {
-			drawResult[idx] = 0;  // 충돌이 일어나지 않은 셀
+	}
+	else if ((i == 0 && j <= N - 1) || (i == N - 1 && j <= N - 1) ||
+		(i <= N - 1 && j == 0) || (i <= N - 1 && j == N - 1)) {
+		calcResult[idx] = (calcResult[idx] == 1) ? 2 : 0;
+	}
+}
+
+// 경계조건 셀 정의
+__global__ void diveide_midCell_draw(int N, int* drawResult) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = DIX(i, j);
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
+		if (drawResult[idx] == 1 &&
+			(drawResult[DIX(i - 1, j)] == 2 || drawResult[DIX(i + 1, j)] == 2 ||
+			drawResult[DIX(i, j - 1)] == 2 || drawResult[DIX(i, j + 1)] == 2 ||
+			drawResult[DIX(i + 1, j + 1)] == 2 || drawResult[DIX(i + 1, j - 1)] == 2 || 
+			drawResult[DIX(i - 1, j + 1)] == 2 || drawResult[DIX(i - 1, j - 1)] == 2)) {
+			drawResult[idx] = 3;
+		}
+	}
+}
+
+//__global__ void diveide_midCell_calc(int N, int* calcResult) {
+//	int i = blockIdx.x * blockDim.x + threadIdx.x;
+//	int j = blockIdx.y * blockDim.y + threadIdx.y;
+//	int idx = IX(i + 1, j + 1);
+//	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
+//		if (calcResult[idx] == 1 &&
+//			(calcResult[IX(i - 1, j)] == 2 || calcResult[IX(i + 1, j)] == 2 ||
+//			calcResult[IX(i, j - 1)] == 2 || calcResult[IX(i, j + 1)] == 2||
+//			calcResult[IX(i + 1, j + 1)] == 2 || calcResult[IX(i + 1, j - 1)] == 2 ||
+//			calcResult[IX(i - 1, j + 1)] == 2 || calcResult[IX(i - 1, j - 1)] == 2)) {
+//			calcResult[idx] = 3;
+//		}
+//	}
+//}
+
+// 경계조건 셀 설정 - 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽, 7 : 왼쪽 위 코너, 8 : 오른쪽 위 코너, 9 : 오른쪽 아래 코너, 10 : 왼쪽 아래 코너
+__global__ void diveide_midCell_calc(int N, int* calcResult) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i + 1, j + 1);
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1 && calcResult[idx] == 1) {
+		if (calcResult[IX(i, j + 1)] == 2) {
+			calcResult[idx] = 3;
+		}
+		else if (calcResult[IX(i, j - 1)] == 2) {
+			calcResult[idx] = 4;
+		}
+		else if (calcResult[IX(i + 1, j)] == 2) {
+			calcResult[idx] = 5;
+		}
+		else if (calcResult[IX(i - 1, j)] == 2) {
+			calcResult[idx] = 6;
 		}
 	}
 }
@@ -99,5 +159,10 @@ void calcCollision::check_collision(int N) {
 	collision_kernel<<<gridDim, blockDim>>>(N, sphere_center, cScale, collisionResult_D, collisionResult_IX, cx, cy);
 	cudaDeviceSynchronize();
 
-	divide_collision_draw<<<gridDim, blockDim>>>(N, draw_InsideCell, draw_OutsideCell, collisionResult_D);
+	divide_collision_draw<<<gridDim, blockDim>>>(N, collisionResult_D);
+	divide_collision_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
+	cudaDeviceSynchronize();
+
+	diveide_midCell_draw<<<gridDim, blockDim>>>(N, collisionResult_D);
+	diveide_midCell_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
 }

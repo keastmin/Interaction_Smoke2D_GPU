@@ -14,13 +14,6 @@ public:
 	int* collisionResult_D;
 	int* collisionResult_IX;
 
-	int* calc_UpCell;
-	int* calc_DownCell;
-	int* calc_LeftCell;
-	int* calc_RightCell;
-
-
-
 	int* calc_CornerCell;
 
 	double cx, cy;
@@ -36,7 +29,9 @@ public:
 __global__ void collision_kernel(int N, glm::vec3 sphere_center, float sphere_radius, int* drawResult, int* calcResult, double dx, double dy);
 __global__ void divide_collision_draw(int N, int* drawResult);
 __global__ void divide_collision_calc(int N, int* calcResult);
-__global__ void diveide_midCell_draw(int N, int* drawResult);
-__global__ void diveide_midCell_calc(int N, int* calcResult);
+__global__ void divide_midCell_draw(int N, int* drawResult);
+__global__ void divide_midCell_calc(int N, int* calcResult);
+__global__ void divide_OutCornerCell_calc(int N, int* calcResult);
+__global__ void divide_InCornerCell_calc(int N, int* calcResult);
 
 #endif __CALCCOLLISION_H__

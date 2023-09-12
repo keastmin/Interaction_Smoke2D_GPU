@@ -93,7 +93,7 @@ __global__ void divide_collision_calc(int N, int* calcResult) {
 }
 
 // 경계조건 셀 정의
-__global__ void diveide_midCell_draw(int N, int* drawResult) {
+__global__ void divide_midCell_draw(int N, int* drawResult) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	int idx = DIX(i, j);
@@ -108,23 +108,9 @@ __global__ void diveide_midCell_draw(int N, int* drawResult) {
 	}
 }
 
-//__global__ void diveide_midCell_calc(int N, int* calcResult) {
-//	int i = blockIdx.x * blockDim.x + threadIdx.x;
-//	int j = blockIdx.y * blockDim.y + threadIdx.y;
-//	int idx = IX(i + 1, j + 1);
-//	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
-//		if (calcResult[idx] == 1 &&
-//			(calcResult[IX(i - 1, j)] == 2 || calcResult[IX(i + 1, j)] == 2 ||
-//			calcResult[IX(i, j - 1)] == 2 || calcResult[IX(i, j + 1)] == 2||
-//			calcResult[IX(i + 1, j + 1)] == 2 || calcResult[IX(i + 1, j - 1)] == 2 ||
-//			calcResult[IX(i - 1, j + 1)] == 2 || calcResult[IX(i - 1, j - 1)] == 2)) {
-//			calcResult[idx] = 3;
-//		}
-//	}
-//}
-
-// 경계조건 셀 설정 - 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽, 7 : 왼쪽 위 코너, 8 : 오른쪽 위 코너, 9 : 오른쪽 아래 코너, 10 : 왼쪽 아래 코너
-__global__ void diveide_midCell_calc(int N, int* calcResult) {
+// 경계조건 셀 설정 - 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽, 7 : 왼쪽 위 모서리, 8 : 오른쪽 위 모서리, 9 : 오른쪽 아래 모서리, 10 : 왼쪽 아래 모서리
+// 면에 대한 셀 - 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽
+__global__ void divide_midCell_calc(int N, int* calcResult) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	int idx = IX(i + 1, j + 1);
@@ -140,6 +126,48 @@ __global__ void diveide_midCell_calc(int N, int* calcResult) {
 		}
 		else if (calcResult[IX(i - 1, j)] == 2) {
 			calcResult[idx] = 6;
+		}
+	}
+}
+
+// 외부 모서리에 대한 셀 - 7 : 왼쪽 위 모서리, 8 : 오른쪽 위 모서리, 9 : 오른쪽 아래 모서리, 10 : 왼쪽 아래 모서리
+__global__ void divide_OutCornerCell_calc(int N, int* calcResult) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i + 1, j + 1);
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1 && calcResult[idx] > 2) {
+		if (calcResult[IX(i - 1, j)] == 2 && calcResult[IX(i, j + 1)] == 2) {
+			calcResult[idx] = 7;
+		}
+		else if (calcResult[IX(i + 1, j)] == 2 && calcResult[IX(i, j + 1)] == 2) {
+			calcResult[idx] = 8;
+		}
+		else if (calcResult[IX(i + 1, j)] == 2 && calcResult[IX(i, j - 1)] == 2) {
+			calcResult[idx] = 9;
+		}
+		else if (calcResult[IX(i - 1, j)] == 2 && calcResult[IX(i, j - 1)] == 2) {
+			calcResult[idx] = 10;
+		}
+	}
+}
+
+// 내부 모서리에 대한 셀 - 11 : 왼쪽 위 모서리, 12 오른쪽 위 모서리, 13 오른쪽 아래 모서리, 14 : 왼쪽 아래 모서리
+__global__ void divide_InCornerCell_calc(int N, int* calcResult) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i + 1, j + 1);
+	if (i > 0 && i < N - 1 && j > 0 && j < N - 1 && calcResult[idx] > 2) {
+		if (calcResult[IX(i - 1, j)] > 2 && calcResult[IX(i, j + 1)] > 2) {
+			calcResult[idx] = 11;
+		}
+		else if (calcResult[IX(i + 1, j)] > 2 && calcResult[IX(i, j + 1)] > 2) {
+			calcResult[idx] = 12;
+		}
+		else if (calcResult[IX(i + 1, j)] > 2 && calcResult[IX(i, j - 1)] > 2) {
+			calcResult[idx] = 13;
+		}
+		else if (calcResult[IX(i - 1, j)] > 2 && calcResult[IX(i, j - 1)] > 2) {
+			calcResult[idx] = 14;
 		}
 	}
 }
@@ -163,6 +191,10 @@ void calcCollision::check_collision(int N) {
 	divide_collision_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
 	cudaDeviceSynchronize();
 
-	diveide_midCell_draw<<<gridDim, blockDim>>>(N, collisionResult_D);
-	diveide_midCell_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
+	divide_midCell_draw<<<gridDim, blockDim>>>(N, collisionResult_D);
+	divide_midCell_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
+	cudaDeviceSynchronize();
+
+	divide_OutCornerCell_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
+	divide_InCornerCell_calc<<<gridDim, blockDim>>>(N, collisionResult_IX);
 }

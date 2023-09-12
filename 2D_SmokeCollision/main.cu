@@ -123,6 +123,10 @@ void get_force_source(double* d, double* u, double* v) {
 		forceValue = force * 3;
 		sourceValue = source;
 		setForceAndSource<<<1, 1>>>(d, v, i, j, forceValue, i, 10, sourceValue);
+
+		//i = 2;
+		//j = N / 2;
+		//setForceAndSource<<<1, 1>>>(d, u, i, j, forceValue, i + 5, j, sourceValue);
 	}
 }
 /* --------------------------------------------------- */

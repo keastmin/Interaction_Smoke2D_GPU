@@ -38,7 +38,8 @@ Jos Stam의 논문 기반으로 작성된 Real Time Smoke Simulation을 CUDA를 
 - main 코드의 add_force_source 함수를 통해 외력의 방향을 수정할 수 있음  
 
 **미완성**  
-연기가 장애물을 지나갈 때 충돌처리는 구현 했지만 장애물의 이동에 따라 연기에 외력이 가해지는 현상은 구현 중  
+- 연기가 장애물을 지나갈 때 충돌처리는 구현 했지만 장애물의 이동에 따라 연기에 외력이 가해지는 현상은 구현 중  
+- 장애물의 이동에 따라 연기의 밀도가 이동하는 기능 구현 중
 
 **결과**  
 ![Image Alt Text](https://github.com/keastmin/Interaction_Smoke2D_GPU/blob/main/image/smokeInteraction%20(1).jpg)  

@@ -38,42 +38,8 @@ __global__ void k_update_corners(int N, double* x)
 
 // 충돌 경계 조건 커널
 // 1 : 내부, 2 : 외부, 3 : 위, 4 : 아래, 5 : 오른쪽, 6 : 왼쪽, 7 : 왼쪽 위 모서리, 8 : 오른쪽 위 모서리, 9 : 오른쪽 아래 모서리, 10 : 왼쪽 아래 모서리
-// 면에 대한 경계 조건 커널
-//__global__ void k_collision_bnd(int N, int b, double* x, int* calcResult) {
-//    int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
-//    int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
-//    if (i < N && j < N) {
-//        int idx = IX(i, j);
-//        if (calcResult[idx] == 1) {
-//            x[idx] = 0;
-//        }
-//        else if (calcResult[idx] == 3) {
-//            x[idx] = b == 2 ? -x[IX(i, j + 1)] : x[IX(i, j + 1)];
-//        }
-//        else if (calcResult[idx] == 4) {
-//            x[idx] = b == 2 ? -x[IX(i, j - 1)] : x[IX(i, j - 1)];
-//        }
-//        else if (calcResult[idx] == 5) {
-//            x[idx] = b == 1 ? -x[IX(i + 1, j)] : x[IX(i + 1, j)];
-//        }
-//        else if (calcResult[idx] == 6) {
-//            x[idx] = b == 1 ? -x[IX(i - 1, j)] : x[IX(i - 1, j)];
-//        }
-//        else if (calcResult[idx] == 7) {
-//            x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j + 1)]);
-//        }
-//        else if (calcResult[idx] == 8) {
-//            x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j + 1)]);
-//        }
-//        else if (calcResult[idx] == 9) {
-//            x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j - 1)]);
-//        }
-//        else if (calcResult[idx] == 10) {
-//            x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j - 1)]);
-//        }
-//    }
-//}
 
+// 면에 대한 경계 조건
 __global__ void k_collision_bnd(int N, int b, double* x, int* calcResult) {
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;

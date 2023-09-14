@@ -9,54 +9,54 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="main.cu">
-      <Filter>소스 파일</Filter>
-    </CudaCompile>
-    <CudaCompile Include="FluidSolver.cu">
+    <CudaCompile Include="calcCollision.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
     <CudaCompile Include="velocity.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
-    <CudaCompile Include="density.cu">
+    <CudaCompile Include="main.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
     <CudaCompile Include="drawSphere.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
-    <CudaCompile Include="calcCollision.cu">
+    <CudaCompile Include="FluidSolver.cu">
+      <Filter>소스 파일</Filter>
+    </CudaCompile>
+    <CudaCompile Include="density.cu">
       <Filter>소스 파일</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="control.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="shader.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="calcCollision.cuh">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="control.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="shader.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="FluidSolver.cuh">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="velocity.cuh">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="density.cuh">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="drawSphere.cuh">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="calcCollision.cuh">
+    <ClInclude Include="FluidSolver.cuh">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="density.cuh">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="shader.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="control.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -14,26 +14,22 @@
     <CudaCompile Include="calcCollision.cu" />
     <CudaCompile Include="density.cu" />
     <CudaCompile Include="drawSphere.cu" />
-    <CudaCompile Include="FluidSolver.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </CudaCompile>
+    <CudaCompile Include="FluidSolver.cu" />
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="velocity.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="control.cpp" />
-    <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcCollision.cuh" />
     <ClInclude Include="control.h" />
     <ClInclude Include="density.cuh" />
     <ClInclude Include="drawSphere.cuh" />
-    <ClInclude Include="FluidSolver.cuh">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="FluidSolver.cuh" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="velocity.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="control.cpp" />
+    <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BF658FE8-6E01-4BAF-9064-FF5DD45B431C}</ProjectGuid>

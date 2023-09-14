@@ -14,10 +14,15 @@ public:
 	int* collisionResult_D;
 	int* collisionResult_IX;
 
-	int* calc_CornerCell;
-
 	double cx, cy;
 	float cScale;
+
+	glm::vec3 previous_pos;
+	glm::vec3 current_pos;
+	glm::vec3 direction;
+	
+	double velocity;
+
 public:
 	calcCollision(int N, double dx, double dy, float scale);
 	~calcCollision();
@@ -33,5 +38,6 @@ __global__ void divide_midCell_draw(int N, int* drawResult);
 __global__ void divide_midCell_calc(int N, int* calcResult);
 __global__ void divide_OutCornerCell_calc(int N, int* calcResult);
 __global__ void divide_InCornerCell_calc(int N, int* calcResult);
+__global__ void collision_direction(int N, glm::vec3 sphere_center, int* drawResult, int* calcResult, glm::vec3 dir, double dx, double dy);
 
 #endif __CALCCOLLISION_H__

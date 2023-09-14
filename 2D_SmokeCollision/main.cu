@@ -64,6 +64,39 @@ void free_data() {
 	if (dens_prev) cudaFree(dens_prev);
 }
 
+// 데이터 초기화
+__global__ void k_clear_data(int hN, double* u, double* v, double* up, double* vp, double* d, double* dp) {
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = IX(i, j);
+	if (i <= hN && j <= hN) {
+		u[idx] = 0;
+		v[idx] = 0;
+		up[idx] = 0;
+		vp[idx] = 0;
+		d[idx] = 0;
+		dp[idx] = 0;
+	}
+}
+
+void clear_data() {
+	dim3 blockDim(16, 16);
+	dim3 gridDim((N + blockDim.x + 1) / blockDim.x, (N + blockDim.y + 1) / blockDim.y);
+	k_clear_data<<<gridDim, blockDim>>>(N, u, v, u_prev, v_prev, dens, dens_prev);
+	cudaDeviceSynchronize();
+}
+
+// 시뮬레이션 리셋
+void sim_reset() {
+	clear_data();
+	init_position();
+	addforce[0] = 0;
+	addforce[1] = 0;
+	addforce[2] = 0;
+	mode = 0;
+	hideSphere = 0;
+}
+
 /* --------------------데이터 초기화-------------------- */
 // 데이터 초기값 삽입 커널 함수
 __global__ void initArray(double* array, int size) {
@@ -123,43 +156,40 @@ void get_force_source(double* d, double* u, double* v) {
 		forceValue = force * 3;
 		sourceValue = source;
 		setForceAndSource<<<1, 1>>>(d, v, i, j, forceValue, i, 10, sourceValue);
-
-		//i = 2;
-		//j = N / 2;
-		//setForceAndSource<<<1, 1>>>(d, u, i, j, forceValue, i + 5, j, sourceValue);
 	}
 }
 /* --------------------------------------------------- */
 
 /* --------------------충돌 힘 함수-------------------- */
-__global__ void setCollisionForce(int hN, double* up, double* vp, double* u, double* v, int* calcIdx) {
+__global__ void setCollisionForce(int hN, double* up, double* vp, double* dp, double* u, double* v, double* d, int* calcIdx, glm::vec3 dir, double vel) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	int idx = IX(i + 1, j + 1);
 	if (i < hN && j < hN) {
 		if (calcIdx[idx] == 1) {
-			u[idx] = 0;
-			v[idx] = 0;
+			u[idx] = 0.0;
+			v[idx] = 0.0;
+			d[idx] = 0.0;
 		}
-		else if (calcIdx[idx] == 2) {
-			vp[idx] = 0.3;
+		else if (calcIdx[idx] == 15) {
+			up[idx] = 100 * dir.x * vel;
+			vp[idx] = 100 * dir.y * vel;
 		}
 	}
 }
 
-void collision_force_source(int* calcIdx) {
+void collision_force_source(int* calcIdx, glm::vec3 dir, double vel) {
 	dim3 blockDim(16, 16);
 	dim3 numBlock((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
-	if (addforce[1] == 1) {
-		setCollisionForce<<<numBlock, blockDim>>>(N, u_prev, v_prev, u, v, calcIdx);
-	}
+
+	setCollisionForce<<<numBlock, blockDim>>>(N, u_prev, v_prev, dens_prev, u, v, dens, calcIdx, dir, vel);
 }
 /* --------------------------------------------------- */
 
 // 시뮬레이션 구동 함수
-void sim_fluid(int* calcIdx) {
+void sim_fluid(int* calcIdx, glm::vec3 dir, double vel) {
 	get_force_source(dens_prev, u_prev, v_prev);
-	collision_force_source(calcIdx);
+	collision_force_source(calcIdx, dir, vel);
 	vel_step(N, u, v, u_prev, v_prev, visc, dt, calcIdx);
 	dens_step(N, dens, dens_prev, u, v, diff, dt, calcIdx);
 	cudaDeviceSynchronize();
@@ -190,6 +220,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_2 && action == GLFW_RELEASE) {
 		mode = 1;
 		std::cout << "mode : " << mode << '\n';
+	}
+
+	if (key == GLFW_KEY_C && action == GLFW_RELEASE) {
+		clear_data();
+		std::cout << "clear data" << '\n';
+	}
+
+	if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
+		sim_reset();
+		std::cout << "simulation reset" << '\n';
 	}
 }
 
@@ -270,7 +310,7 @@ int main() {
 		_collision->check_collision(N);
 
 		// 시뮬레이션 반복
-		sim_fluid(_collision->collisionResult_IX);
+		sim_fluid(_collision->collisionResult_IX, _collision->direction, _collision->velocity);
 
 		// 구체 그리기
 		if (!hideSphere) {

@@ -43,8 +43,8 @@ static const int N = SIZE;
 static double dt = 0.08;
 static double diff = 0.0;
 static double visc = 0.0;
-static double force = 10.0;
-static double source = 50.0f;
+static double force = 20.0;
+static double source = 100.0f;
 
 // 시뮬레이션 제어 변수
 static int addforce[3] = { 0, 0, 0 };
@@ -156,6 +156,8 @@ void get_force_source(double* d, double* u, double* v) {
 		forceValue = force * 3;
 		sourceValue = source;
 		setForceAndSource<<<1, 1>>>(d, v, i, j, forceValue, i, 10, sourceValue);
+		//setForceAndSource<<<1, 1>>>(d, v, i - 2, j, forceValue, i, 10, sourceValue);
+		//setForceAndSource<<<1, 1>>>(d, v, i + 2, j, forceValue, i, 10, 0);
 	}
 }
 /* --------------------------------------------------- */
@@ -171,9 +173,11 @@ __global__ void setCollisionForce(int hN, double* up, double* vp, double* dp, do
 			v[idx] = 0.0;
 			d[idx] = 0.0;
 		}
-		else if (calcIdx[idx] == 15) {
-			up[idx] = 100 * dir.x * vel;
-			vp[idx] = 100 * dir.y * vel;
+		if (calcIdx[idx] == 15) {
+			if (dir.x < 0) up[idx - IX(1, 0)] = 100 * dir.x * vel;
+			else up[idx + IX(1, 0)] = 100 * dir.x * vel;
+			if (dir.y < 0) vp[idx - IX(0, 1)] = 100 * dir.y * vel;
+			else vp[idx + IX(0, 1)] = 100 * dir.y * vel;
 		}
 	}
 }

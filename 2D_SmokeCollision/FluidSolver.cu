@@ -43,7 +43,7 @@ __global__ void k_update_corners(int N, double* x)
 __global__ void k_collision_bnd(int N, int b, double* x, int* calcResult) {
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
-    if (i < N && j < N) {
+    if (i <= N && j <= N) {
         int idx = IX(i, j);
         if (calcResult[idx] == 1) {
             x[idx] = 0;
@@ -67,19 +67,23 @@ __global__ void k_collision_bnd(int N, int b, double* x, int* calcResult) {
 __global__ void k_collision_outCorner_bnd(int N, double* x, int* calcResult) {
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
-    if (i < N && j < N) {
+    if (i <= N && j <= N) {
         int idx = IX(i, j);
         if (calcResult[idx] == 7) {
-            x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j + 1)]);
-        }
-        else if (calcResult[idx] == 8) {
-            x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j + 1)]);
-        }
-        else if (calcResult[idx] == 9) {
+            //x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j + 1)]);
             x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j - 1)]);
         }
-        else if (calcResult[idx] == 10) {
+        else if (calcResult[idx] == 8) {
+            //x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j + 1)]);
             x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j - 1)]);
+        }
+        else if (calcResult[idx] == 9) {
+            //x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j - 1)]);
+            x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j + 1)]);
+        }
+        else if (calcResult[idx] == 10) {
+            //x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j - 1)]);
+            x[idx] = 0.5 * (x[IX(i + 1, j)] + x[IX(i, j + 1)]);
         }
     }
 }
@@ -88,7 +92,7 @@ __global__ void k_collision_outCorner_bnd(int N, double* x, int* calcResult) {
 __global__ void k_collision_inCorner_bnd(int N, double* x, int* calcResult) {
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
-    if (i < N && j < N) {
+    if (i <= N && j <= N) {
         int idx = IX(i, j);
         if (calcResult[idx] == 11) {
             x[idx] = 0.5 * (x[IX(i - 1, j)] + x[IX(i, j + 1)]);

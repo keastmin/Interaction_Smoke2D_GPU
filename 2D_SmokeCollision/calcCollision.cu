@@ -34,6 +34,7 @@ void calcCollision::init(int N, double dx, double dy, float scale) {
 	cudaMemset(collisionResult_IX, 0, (N + 2) * (N + 2) * sizeof(int));
 }
 
+// 구체와 그리드의 충돌영역 감지
 __global__ void collision_kernel(int N, glm::vec3 sphere_center, float sphere_radius, int* drawResult, int* calcResult, double dx, double dy) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -68,16 +69,20 @@ __global__ void divide_collision_draw(int N, int* drawResult) {
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	int idx = DIX(i, j);
 	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {  // 배열 경계를 벗어나지 않도록 수정
-		if (drawResult[idx] == 1) {
-			if (drawResult[DIX(i - 1, j)] == 0 || drawResult[DIX(i + 1, j)] == 0 ||
-				drawResult[DIX(i, j - 1)] == 0 || drawResult[DIX(i, j + 1)] == 0) {
+		if (drawResult[idx] == 0) {
+			if (drawResult[DIX(i - 1, j)] == 1 || drawResult[DIX(i + 1, j)] == 1 ||
+				drawResult[DIX(i, j - 1)] == 1 || drawResult[DIX(i, j + 1)] == 1 ||
+				drawResult[DIX(i - 1, j - 1)] == 1 || drawResult[DIX(i - 1, j + 1)] == 1||
+				drawResult[DIX(i + 1, j - 1)] == 1 || drawResult[DIX(i + 1, j + 1)] == 1) {
 				drawResult[idx] = 2;  // 외부 셀
 			}
 		}
 	}
 	else if ((i == 0 && j <= N - 1) || (i == N - 1 && j <= N - 1) ||
-			(i <= N - 1 && j == 0) || (i <= N - 1 && j == N - 1)) {		
-		drawResult[idx] = (drawResult[idx] == 1) ? 2 : 0;
+		(i <= N - 1 && j == 0) || (i <= N - 1 && j == N - 1)) {
+		if (drawResult[idx] >= 1) {
+			drawResult[idx] = 2;
+		}
 	}
 }
 
@@ -86,19 +91,24 @@ __global__ void divide_collision_calc(int N, int* calcResult) {
 	int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
 	int idx = IX(i, j);
 
-	if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {  // 배열 경계를 벗어나지 않도록 수정
-		if (calcResult[idx] == 1) {
-			if (calcResult[IX(i - 1, j)] == 0 || calcResult[IX(i + 1, j)] == 0 ||
-				calcResult[IX(i, j - 1)] == 0 || calcResult[IX(i, j + 1)] == 0) {
+	if (i > 1 && i < N && j > 1 && j < N) {  // 배열 경계를 벗어나지 않도록 수정
+		if (calcResult[idx] == 0) {
+			if (calcResult[IX(i - 1, j)] == 1 || calcResult[IX(i + 1, j)] == 1 ||
+				calcResult[IX(i, j - 1)] == 1 || calcResult[IX(i, j + 1)] == 1 ||
+				calcResult[IX(i - 1, j - 1)] == 1 || calcResult[IX(i - 1, j + 1)] == 1 ||
+				calcResult[IX(i + 1, j - 1)] == 1 || calcResult[IX(i + 1, j + 1)] == 1) {
 				calcResult[idx] = 2;  // 외부 셀
 			}
 		}
 	}
-	else if ((i == 0 && j <= N - 1) || (i == N - 1 && j <= N - 1) ||
-		(i <= N - 1 && j == 0) || (i <= N - 1 && j == N - 1)) {
-		calcResult[idx] = (calcResult[idx] == 1) ? 2 : 0;
+	else if ((i == 1 && j <= N) || (i == N && j <= N) ||
+		(i <= N && j == 1) || (i <= N && j == N)) {
+		if (calcResult[idx] >= 1) {
+			calcResult[idx] = 2;
+		}
 	}
 }
+
 
 // 경계조건 셀 정의
 __global__ void divide_midCell_draw(int N, int* drawResult) {

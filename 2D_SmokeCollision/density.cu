@@ -111,23 +111,23 @@ __global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_
 		glm::vec3 collisionColorMid(1.0f, 0.0f, 1.0f);
 		glm::vec3 collisionVector(0.0f, 1.0f, 1.0f);
 
-		//if (collision_result[idx] == 1) {
-			//densC[6 * idx + 0] = collisionColorIn;
-			//densC[6 * idx + 1] = collisionColorIn;
-			//densC[6 * idx + 2] = collisionColorIn;
+		if (collision_result[idx] == 1) {
+			densC[6 * idx + 0] = collisionColorIn;
+			densC[6 * idx + 1] = collisionColorIn;
+			densC[6 * idx + 2] = collisionColorIn;
 
-			//densC[6 * idx + 3] = collisionColorIn;
-			//densC[6 * idx + 4] = collisionColorIn;
-			//densC[6 * idx + 5] = collisionColorIn;
-		//}
+			densC[6 * idx + 3] = collisionColorIn;
+			densC[6 * idx + 4] = collisionColorIn;
+			densC[6 * idx + 5] = collisionColorIn;
+		}
 		//else if (collision_result[idx] == 2) {
-			//densC[6 * idx + 0] = collisionColorOut;
-			//densC[6 * idx + 1] = collisionColorOut;
-			//densC[6 * idx + 2] = collisionColorOut;
+		//	//densC[6 * idx + 0] = collisionColorOut;
+		//	//densC[6 * idx + 1] = collisionColorOut;
+		//	//densC[6 * idx + 2] = collisionColorOut;
 
-			//densC[6 * idx + 3] = collisionColorOut;
-			//densC[6 * idx + 4] = collisionColorOut;
-			//densC[6 * idx + 5] = collisionColorOut;
+		//	//densC[6 * idx + 3] = collisionColorOut;
+		//	//densC[6 * idx + 4] = collisionColorOut;
+		//	//densC[6 * idx + 5] = collisionColorOut;
 		//}
 		//else if (collision_result[idx] == 3) {
 		//	densC[6 * idx + 0] = collisionColorMid;
@@ -139,15 +139,15 @@ __global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_
 		//	densC[6 * idx + 5] = collisionColorMid;
 		//}
 		//else if (collision_result[idx] == 15) {
-		//	densC[6 * idx + 0] = collisionVector;
-		//	densC[6 * idx + 1] = collisionVector;
-		//	densC[6 * idx + 2] = collisionVector;
+		//	//densC[6 * idx + 0] = collisionVector;
+		//	//densC[6 * idx + 1] = collisionVector;
+		//	//densC[6 * idx + 2] = collisionVector;
 
-		//	densC[6 * idx + 3] = collisionVector;
-		//	densC[6 * idx + 4] = collisionVector;
-		//	densC[6 * idx + 5] = collisionVector;
+		//	//densC[6 * idx + 3] = collisionVector;
+		//	//densC[6 * idx + 4] = collisionVector;
+		//	//densC[6 * idx + 5] = collisionVector;
 		//}
-		//else {
+		else {
 			densC[6 * idx + 0] = densColord00;
 			densC[6 * idx + 1] = densColord01;
 			densC[6 * idx + 2] = densColord11;
@@ -155,7 +155,7 @@ __global__ void update_dens(int N, glm::vec3* densC, double* kd, int* collision_
 			densC[6 * idx + 3] = densColord11;
 			densC[6 * idx + 4] = densColord10;
 			densC[6 * idx + 5] = densColord00;
-		//}
+		}
 	}
 }
 
